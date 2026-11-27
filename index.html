@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ink Usage Calculator for Flexo &amp; Gravure Printing | Star Color</title>
+<meta name="description" content="Free ink usage calculator for flexo & gravure printing. Estimate water-based ink consumption and cost by area, coverage, anilox LPI or plate depth — dynamic waste factor included, no sign-up required.">
+<link rel="canonical" href="https://www.starcolor-ink.com/info/estimate-ink-usage.html">
+<style>
+  :root{
+    --navy:#1a3c6c;
+    --navy-2:#24508c;
+    --orange:#ff6600;
+    --orange-2:#e65c00;
+    --green:#01a360;
+    --green-2:#017f4b;
+    --result-bg:#e8f4fd;
+    --ink:#243447;
+    --muted:#5c6b7a;
+    --line:#e2e8ef;
+    --bg:#f4f7fb;
+    --white:#fff;
+    --radius:14px;
+    --shadow:0 10px 30px rgba(20,44,80,.10);
+    --shadow-sm:0 2px 10px rgba(20,44,80,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--navy-2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .container{max-width:1120px;margin:0 auto;padding:0 20px}
+
+  /* Header */
+  .site-header{background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  .site-header .container{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--navy);font-size:18px}
+  .brand-dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--orange),var(--green));display:inline-block}
+  .brand small{display:block;font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.3px}
+  .header-link{font-size:14px;font-weight:600;color:var(--navy);border:1px solid var(--line);padding:8px 16px;border-radius:999px;transition:.2s}
+  .header-link:hover{background:var(--navy);color:#fff;text-decoration:none;border-color:var(--navy)}
+
+  /* Hero */
+  .hero{padding:54px 0 10px;text-align:center}
+  .hero h1{color:var(--navy);font-size:clamp(26px,4vw,40px);line-height:1.25;letter-spacing:-.5px}
+  .hero .subtitle{color:var(--muted);font-size:clamp(15px,2vw,18px);margin-top:14px}
+  .hero .lead{max-width:860px;margin:18px auto 0;color:#4d5f6f;font-size:15px}
+  .hero .lead strong{color:var(--green-2)}
+
+  /* Layout */
+  .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:36px 0 10px;align-items:start}
+  .panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px}
+  .panel h2{color:var(--navy);font-size:19px;margin-bottom:20px;display:flex;align-items:center;gap:9px}
+  .panel h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--orange);display:inline-block}
+
+  /* Form */
+  .form-group{margin-bottom:18px}
+  .form-group:last-child{margin-bottom:0}
+  label{display:block;font-weight:600;color:#33455a;margin-bottom:8px;font-size:14px}
+  select,input[type="number"]{
+    width:100%;padding:11px 12px;border:1px solid #d5dde7;border-radius:9px;font-size:15px;
+    background:#fbfcfe;color:var(--ink);transition:border-color .15s,box-shadow .15s;
+  }
+  select:focus,input[type="number"]:focus{outline:none;border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(36,80,140,.12)}
+  input[type="range"]{width:100%;height:26px;padding:0;border:none;background:transparent;accent-color:var(--orange);cursor:pointer}
+  .speed-head{display:flex;justify-content:space-between;align-items:baseline}
+  .speed-head .val{color:var(--orange);font-weight:700}
+  .btn-container{display:flex;gap:12px;margin-top:26px}
+  .btn{flex:1;padding:13px 20px;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:.2s}
+  .btn-calculate{background:var(--orange);color:#fff;box-shadow:0 6px 16px rgba(255,102,0,.28)}
+  .btn-calculate:hover{background:var(--orange-2);transform:translateY(-1px)}
+  .btn-reset{background:#eef2f7;color:#4a5a6b}
+  .btn-reset:hover{background:#e2e8f1}
+
+  /* Results */
+  .result-box{background:linear-gradient(180deg,#eef7ff,#e2f1fd);border:1px solid #cfe4f5;border-radius:12px;padding:20px 22px}
+  .result-box h3{color:var(--navy);font-size:17px;margin-bottom:8px}
+  .result-item{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:9px 0;border-bottom:1px dashed #c9dcee;font-size:14px}
+  .result-item:last-child{border-bottom:none}
+  .result-item .k{color:#41566b}
+  .result-value{font-weight:700;color:var(--orange-2);white-space:nowrap}
+  .result-item.highlight .result-value{color:var(--navy);font-size:18px}
+  .result-item.total{background:#fff;border-radius:9px;padding:11px 12px;margin:4px 0;border:none;box-shadow:var(--shadow-sm)}
+
+  .notes{margin-top:20px;background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-size:13px;color:#5b6b7b}
+  .notes h4{color:#33455a;font-size:14px;margin-bottom:10px}
+  .notes ul{margin-left:18px}
+  .notes li{margin-bottom:7px}
+  .notes strong{color:var(--navy)}
+
+  /* Tables */
+  .table-section{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:24px;margin-top:26px}
+  .table-section h2{color:var(--navy);font-size:18px;margin-bottom:14px}
+  .table-wrap{overflow-x:auto}
+  table.reference-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
+  .reference-table th,.reference-table td{border:1px solid #e3e9f0;padding:10px 10px;text-align:center}
+  .reference-table th{background:var(--green);color:#fff;font-weight:600}
+  .reference-table tbody tr:nth-child(even){background:#f8fbf9}
+  .reference-table tbody tr:hover{background:#eaf5ef}
+
+  /* CTA */
+  .cta{margin:26px 0 8px;background:linear-gradient(135deg,#f2f9f5,#e9f4ef);border:1px solid #cfe8d8;border-radius:16px;padding:38px 28px;text-align:center}
+  .cta h2{color:var(--navy);font-size:24px;margin-bottom:10px}
+  .cta p{color:#4d5f6f;max-width:760px;margin:0 auto 24px;font-size:15px}
+  .cta-actions{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+  .cta-actions a{padding:13px 26px;border-radius:9px;font-weight:600;font-size:15px;transition:.2s}
+  .cta-actions a:hover{text-decoration:none;transform:translateY(-1px)}
+  .cta-primary{background:var(--green);color:#fff;box-shadow:0 6px 16px rgba(1,163,96,.26)}
+  .cta-primary:hover{background:var(--green-2)}
+  .cta-secondary{background:var(--navy);color:#fff}
+  .cta-secondary:hover{background:var(--navy-2)}
+  .cta-ghost{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+  .cta-ghost:hover{background:var(--navy);color:#fff}
+  .cta .fine{font-size:.85rem;color:#8794a3;margin-top:18px}
+
+  /* FAQ */
+  .faq{margin:30px 0 0}
+  .faq h2{color:var(--navy);font-size:22px;text-align:center;margin-bottom:6px}
+  .faq .faq-sub{color:var(--muted);text-align:center;margin-bottom:22px}
+  details.faq-item{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:0;margin-bottom:12px;box-shadow:var(--shadow-sm);overflow:hidden}
+  details.faq-item summary{cursor:pointer;padding:16px 20px;font-weight:600;color:#2c3e50;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  details.faq-item summary::-webkit-details-marker{display:none}
+  details.faq-item summary::after{content:"+";font-size:20px;color:var(--orange);font-weight:400;transition:transform .2s}
+  details.faq-item[open] summary::after{content:"\2013"}
+  details.faq-item .answer{padding:0 20px 18px;color:#54626f;font-size:14.5px}
+
+  /* Footer */
+  .site-footer{background:var(--navy);color:#c8d6e6;margin-top:40px;padding:30px 0;font-size:14px}
+  .site-footer .container{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}
+  .site-footer a{color:#dfe9f4}
+  .site-footer .muted{color:#8ea6c1;font-size:13px}
+
+  @media (max-width:820px){
+    .calc-grid{grid-template-columns:1fr}
+    .hero{padding:36px 0 6px}
+    .panel{padding:22px}
+    .cta{padding:28px 18px}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="https://www.starcolor-ink.com/" target="_blank" rel="noopener">
+      <span class="brand-dot"></span>
+      <span>Star Color<small>Water-based ink manufacturer</small></span>
+    </a>
+    <a class="header-link" href="https://www.starcolor-ink.com/contact/?type=technical#leave-messasge" target="_blank" rel="noopener">Contact Us</a>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <section class="hero">
+      <h1>Ink Usage Calculator for Flexo &amp; Gravure Printing</h1>
+      <p class="subtitle">Estimate water-based ink consumption and cost in seconds — dynamic waste factor included</p>
+      <p class="lead">
+        Plan your ink budget with confidence. Enter your print area, coverage, anilox LPI (or gravure cell depth),
+        substrate and press speed — the calculator returns total ink demand, a per-color CMYK breakdown and an
+        indicative cost. Results are planning numbers for standard CMYK process work; for spot colors or an exact
+        quotation, our lab confirms volumes from your artwork and offers
+        <strong>free 5 kg samples dispatched within 72 hours</strong>.
+      </p>
+    </section>
+
+    <div class="calc-grid">
+      <!-- Left: inputs -->
+      <form class="panel" id="calcForm" onsubmit="return false;">
+        <h2><span class="dot"></span>Printing Parameters</h2>
+
+        <div class="form-group">
+          <label for="printType">Printing Process</label>
+          <select id="printType" onchange="updateProcessFields()">
+            <option value="flexo">Flexo Printing</option>
+            <option value="gravure">Gravure Printing</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="substrate">Substrate Type</label>
+          <select id="substrate">
+            <option value="paper">Paper (Kraft / Cardboard)</option>
+            <option value="film">Plastic Film (BOPP / PET / PE)</option>
+            <option value="metal">Aluminum Foil</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="printArea">Print Coverage Area (m²)</label>
+          <input type="number" id="printArea" placeholder="Enter total print area" min="1" step="1" value="1000">
+        </div>
+
+        <div class="form-group">
+          <label for="coverage">Print Coverage (%)</label>
+          <select id="coverage">
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+            <option value="40">40%</option>
+            <option value="50" selected>50%</option>
+            <option value="60">60%</option>
+            <option value="70">70%</option>
+            <option value="80">80%</option>
+            <option value="90">90%</option>
+            <option value="100">100%</option>
+          </select>
+        </div>
+
+        <!-- Flexo-specific field -->
+        <div class="form-group" id="flexoFields">
+          <label for="aniloxLPI">Anilox Roll LPI</label>
+          <select id="aniloxLPI">
+            <option value="200">200 LPI (Coarse / Solid)</option>
+            <option value="360">360 LPI (Standard)</option>
+            <option value="400">400 LPI (Standard)</option>
+            <option value="600" selected>600 LPI (Standard)</option>
+            <option value="800">800 LPI (Fine)</option>
+            <option value="1000">1000 LPI (Ultra Fine)</option>
+            <option value="1200">1200 LPI (High Definition)</option>
+          </select>
+        </div>
+
+        <!-- Gravure-specific field -->
+        <div class="form-group" id="gravureFields" style="display:none">
+          <label for="plateDepth">Plate Depth (microns)</label>
+          <select id="plateDepth">
+            <option value="20">20 microns (Shallow)</option>
+            <option value="25" selected>25 microns (Standard)</option>
+            <option value="30">30 microns (Deep)</option>
+            <option value="35">35 microns (Very Deep)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div class="speed-head">
+            <label for="speed" style="margin-bottom:0">Production Speed</label>
+            <span class="val"><span id="speedValue">100</span> m/min</span>
+          </div>
+          <input type="range" id="speed" min="20" max="400" step="5" value="100"
+                 oninput="document.getElementById('speedValue').textContent=this.value">
+        </div>
+
+        <div class="btn-container">
+          <button type="button" class="btn btn-calculate" onclick="calculateInk()">Calculate</button>
+          <button type="button" class="btn btn-reset" onclick="resetForm()">Reset</button>
+        </div>
+      </form>
+
+      <!-- Right: results -->
+      <aside class="panel">
+        <h2><span class="dot"></span>Ink Usage Estimate</h2>
+
+        <div class="result-box" id="resultBox" aria-live="polite">
+          <div class="result-item total highlight">
+            <span class="k">Total Ink Required</span>
+            <span class="result-value" id="totalInk">0 kg</span>
+          </div>
+          <div class="result-item">
+            <span class="k">Ink Layer Thickness</span>
+            <span class="result-value" id="inkLayerResult">0 gsm</span>
+          </div>
+          <div class="result-item">
+            <span class="k">Ink Price per kg</span>
+            <span class="result-value" id="pricePerKg">$0.00</span>
+          </div>
+          <div class="result-item">
+            <span class="k">Ink per Color (Average)</span>
+            <span class="result-value" id="inkPerColor">0 kg</span>
+          </div>
+          <div class="result-item">
+            <span class="k">Black Ink</span>
+            <span class="result-value" id="blackInk">0 kg</span>
+          </div>
+          <div class="result-item">
+            <span class="k">CMY Inks (Total)</span>
+            <span class="result-value" id="cmyInk">0 kg</span>
+          </div>
+          <div class="result-item total">
+            <span class="k">Estimated Cost (USD)</span>
+            <span class="result-value" id="estimatedCost">$0</span>
+          </div>
+        </div>
+
+        <div class="notes">
+          <h4>Calculation Notes</h4>
+          <ul>
+            <li>Results assume a standard 4-color (CMYK) process: Black ≈ 30% of total volume, Cyan 20%, Magenta 25%, Yellow 25%</li>
+            <li>Dynamic waste factor is included automatically: 18% under 2,000 m² · 12% at 2,000–10,000 m² · 8% above 10,000 m²; speeds above 200 m/min add a small extra allowance</li>
+            <li>Indicative prices reflect standard water-based ink series ($4–5/kg by substrate); custom Pantone matches and functional inks are quoted separately</li>
+            <li>Minimum order: <strong>5 kg per color</strong> — free standard samples (5 kg/color) are dispatched within 72 hours; orders under 1 ton also ship within 72 hours</li>
+            <li>For a volume-accurate quotation, send us your artwork and substrate — <a href="https://www.starcolor-ink.com/contact/?type=technical#leave-messasge" target="_blank" rel="noopener">contact our technical team</a></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Reference tables -->
+    <section class="table-section">
+      <h2>Flexo Anilox Roll LPI Reference</h2>
+      <div class="table-wrap">
+        <table class="reference-table">
+          <thead>
+            <tr><th>LPI</th><th>BCM Range</th><th>Wet Ink (g/m²)</th><th>Application</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>200 LPI</td><td>7.0 – 8.5</td><td>8.0 – 10.0</td><td>Heavy corrugated / Coating</td></tr>
+            <tr><td>360 LPI</td><td>3.8 – 5.0</td><td>4.5 – 6.0</td><td>Standard corrugated / Woven bag</td></tr>
+            <tr><td>400 LPI</td><td>3.2 – 4.2</td><td>3.8 – 5.0</td><td>Water-based flexo standard</td></tr>
+            <tr><td>600 LPI</td><td>2.2 – 2.8</td><td>2.6 – 3.5</td><td>Fine packaging / Labels</td></tr>
+            <tr><td>800 LPI</td><td>1.6 – 2.0</td><td>1.9 – 2.5</td><td>High definition dots</td></tr>
+            <tr><td>1000 LPI</td><td>1.2 – 1.5</td><td>1.4 – 1.9</td><td>Ultra fine printing</td></tr>
+            <tr><td>1200 LPI</td><td>0.9 – 1.2</td><td>1.1 – 1.5</td><td>Offset-like quality</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="table-section">
+      <h2>Gravure Plate Depth Reference</h2>
+      <div class="table-wrap">
+        <table class="reference-table">
+          <thead>
+            <tr><th>Depth (microns)</th><th>BCM Range</th><th>Wet Ink (g/m²)</th><th>Application</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>20 microns</td><td>3.5 – 4.5</td><td>4.0 – 5.5</td><td>Fine lines / Small solids</td></tr>
+            <tr><td>25 microns</td><td>4.5 – 5.5</td><td>5.0 – 6.5</td><td>Standard gravure printing</td></tr>
+            <tr><td>30 microns</td><td>5.5 – 6.5</td><td>6.5 – 7.5</td><td>Heavy ink laydown / Large solids</td></tr>
+            <tr><td>35 microns</td><td>6.5 – 7.5</td><td>7.5 – 9.0</td><td>Maximum ink coverage / Textures</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+      <h2>From Estimate to Exact Quote</h2>
+      <p>The calculator gives you a solid planning number. When you're ready to buy, we make the next step simple — free samples, fast dispatch and transparent terms.</p>
+      <div class="cta-actions">
+        <a class="cta-primary" href="https://www.starcolor-ink.com/contact/?type=sample#leave-messasge" target="_blank" rel="noopener">Request a Free 5 kg Sample →</a>
+        <a class="cta-secondary" href="https://www.starcolor-ink.com/contact/?type=quote#leave-messasge" target="_blank" rel="noopener">Send Artwork for an Exact Quote →</a>
+        <a class="cta-ghost" href="https://www.starcolor-ink.com/contact/how-to-order.html" target="_blank" rel="noopener">How to Order</a>
+      </div>
+      <p class="fine">ΔE ≤ 2 batch color tolerance · 72-hour sample &amp; small-order dispatch · FOB Chinese port</p>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq">
+      <h2>FAQ: Estimating Printing Ink Usage</h2>
+      <p class="faq-sub">How the calculator works, what is included, and how to get from estimate to exact quote.</p>
+
+      <details class="faq-item">
+        <summary>How is theoretical ink consumption calculated?</summary>
+        <div class="answer">Ink demand is driven by three variables: the printed area, the wet ink laydown (set by your <a href="https://www.starcolor-ink.com/resources/anilox-roller-guide.html" target="_blank" rel="noopener">anilox roll</a> in flexo, or the cylinder depth in gravure), and the ink's specific gravity. Our calculator starts from the wet-film volume of your chosen anilox or plate, applies substrate and press-speed corrections, and returns the total kilogram estimate — the classic Area × Laydown × Density relationship, fully automated.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Does this calculator account for printing waste?</summary>
+        <div class="answer">Yes — a dynamic waste factor is built into every result, so you don't need to add a margin yourself. Setup and make-ready cost proportionally more on short runs, so the calculator applies <strong>18% for jobs under 2,000 m²</strong>, <strong>12% for 2,000–10,000 m²</strong> and <strong>8% above 10,000 m²</strong>. Press speeds above 200 m/min add a small extra allowance for misting and volatility.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Why is accurate ink estimation important for my budget?</summary>
+        <div class="answer">Over-estimating ties up capital in ink you may never print — and water-based inks have a shelf life. Under-estimating risks a mid-run shortage and a production stop that costs far more than the ink. A reliable estimate also lets you quote packaging jobs competitively instead of guessing.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>What factors affect ink usage in Flexo and Gravure?</summary>
+        <div class="answer">The biggest lever is your ink delivery hardware: <a href="https://www.starcolor-ink.com/resources/anilox-roller-guide.html" target="_blank" rel="noopener">anilox roll volume (BCM)</a> in flexo and cylinder depth in gravure. Then comes substrate absorbency (paper pulls more ink than film), print coverage, press speed and the pigment concentration of the series you choose. Our <a href="https://www.starcolor-ink.com/resources/substrate-compatibility.html" target="_blank" rel="noopener">substrate compatibility guide</a> explains how each surface behaves.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I use this for custom color matching?</summary>
+        <div class="answer">Yes. The volume calculation is the same; custom Pantone matches may have a slightly different density, which our lab confirms when quoting. If you're planning a custom color, start with our <a href="https://www.starcolor-ink.com/color-management/" target="_blank" rel="noopener">color matching service</a> — every match is verified with a drawdown proof and held to a ΔE ≤ 2 batch tolerance before you order.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>How accurate is the estimate — and how do I get an exact number?</summary>
+        <div class="answer">For standard 4-color (CMYK) process work, results typically land within ±10–15% of real consumption. Heavy white on film, dense spot colors or highly absorbent kraft can shift the number. For an exact figure, send us your artwork and substrate: we run a lab drawdown and confirm the ink demand per color — free 5 kg samples ship within 72 hours, and production orders under 1 ton dispatch within 72 hours as well.</div>
+      </details>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div>
+      <strong>Star Color</strong> — Water-based ink for flexo &amp; gravure printing
+      <div class="muted">Ink Usage Calculator · standalone open tool</div>
+    </div>
+    <div class="muted">© <span id="year"></span> Huizhou Star Color Technology Co., Ltd. All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+/* Toggle flexo / gravure specific fields */
+function updateProcessFields() {
+  var printType = document.getElementById('printType').value;
+  document.getElementById('flexoFields').style.display   = (printType === 'flexo')   ? 'block' : 'none';
+  document.getElementById('gravureFields').style.display = (printType === 'gravure') ? 'block' : 'none';
+}
+
+/* Core calculation — identical formula to the Star Color website tool */
+function calculateInk() {
+  var printArea = parseFloat(document.getElementById('printArea').value) || 1000; // m²
+  var coveragePercent = parseFloat(document.getElementById('coverage').value) || 50; // %
+  var coverage = coveragePercent / 100; // 0–1
+
+  // Dynamic waste factor: smaller runs incur proportionally more waste
+  var baseWastage = 10;
+  if (printArea < 2000)       baseWastage = 18;
+  else if (printArea < 10000) baseWastage = 12;
+  else                        baseWastage = 8;
+
+  var speed = parseFloat(document.getElementById('speed').value) || 100;
+  var printType = document.getElementById('printType').value;
+  var substrate = document.getElementById('substrate').value;
+
+  // Speed factor: faster presses lose more ink to misting / volatility
+  var speedFactor = 1.0;
+  if (speed > 200) speedFactor = 1.05;
+  if (speed > 300) speedFactor = 1.10;
+
+  // Core parameter: BCM
+  var bcmValue = 2.5;
+  var priceMultiplier = 1.0;
+
+  if (printType === 'flexo') {
+    var aniloxLPI = parseInt(document.getElementById('aniloxLPI').value, 10) || 600;
+    switch (aniloxLPI) {
+      case 200:  bcmValue = 7.5;  priceMultiplier = 0.9;  break;
+      case 360:  bcmValue = 4.4;  priceMultiplier = 0.95; break;
+      case 400:  bcmValue = 3.7;  priceMultiplier = 1.0;  break;
+      case 600:  bcmValue = 2.5;  priceMultiplier = 1.1;  break;
+      case 800:  bcmValue = 1.8;  priceMultiplier = 1.25; break;
+      case 1000: bcmValue = 1.35; priceMultiplier = 1.35; break;
+      case 1200: bcmValue = 1.05; priceMultiplier = 1.5;  break;
+      default:   bcmValue = 2.5;  priceMultiplier = 1.1;  break;
+    }
+  } else if (printType === 'gravure') {
+    var plateDepth = parseInt(document.getElementById('plateDepth').value, 10) || 25;
+    if (plateDepth === 20)      { bcmValue = 4.0; priceMultiplier = 1.0;  }
+    else if (plateDepth === 25) { bcmValue = 5.0; priceMultiplier = 1.05; }
+    else if (plateDepth === 30) { bcmValue = 6.0; priceMultiplier = 1.1;  }
+    else if (plateDepth === 35) { bcmValue = 7.0; priceMultiplier = 1.15; }
+    else                        { bcmValue = 5.0; priceMultiplier = 1.05; }
+  }
+
+  // Wet ink per square metre (single colour, g/m²)
+  var inkWeightPerSqm = bcmValue * 2.8;
+
+  // Substrate factor
+  var substrateFactor = 1.0;
+  if (substrate === 'paper') substrateFactor = 1.2;
+  if (substrate === 'film')  substrateFactor = 0.95;
+  if (substrate === 'metal') substrateFactor = 0.90;
+
+  // Total theoretical ink (kg): area × coverage × per-colour laydown × 4 colours × corrections
+  var theoreticalInk = (printArea * coverage * inkWeightPerSqm * 4 * substrateFactor * speedFactor) / 1000;
+
+  // Add dynamic waste
+  var totalInk = theoreticalInk * (1 + baseWastage / 100);
+
+  // Price per kg
+  var basePricePerKg = 4;
+  if (substrate === 'film')  basePricePerKg = 4.5;
+  else if (substrate === 'metal') basePricePerKg = 5;
+
+  var finalPricePerKg = basePricePerKg * priceMultiplier;
+  var totalCost = totalInk * finalPricePerKg;
+
+  // CMYK breakdown (average artwork distribution)
+  var inkPerColor = totalInk / 4;
+  var blackInk   = totalInk * 0.30;
+  var cyanInk    = totalInk * 0.20;
+  var magentaInk = totalInk * 0.25;
+  var yellowInk  = totalInk * 0.25;
+  var cmyInk     = cyanInk + magentaInk + yellowInk;
+
+  // Output
+  document.getElementById('totalInk').textContent        = totalInk.toFixed(2) + ' kg';
+  document.getElementById('inkLayerResult').textContent  = inkWeightPerSqm.toFixed(2) + ' gsm';
+  document.getElementById('pricePerKg').textContent      = '$' + finalPricePerKg.toFixed(2);
+  document.getElementById('inkPerColor').textContent     = inkPerColor.toFixed(2) + ' kg';
+  document.getElementById('blackInk').textContent        = blackInk.toFixed(2) + ' kg';
+  document.getElementById('cmyInk').textContent          = cmyInk.toFixed(2) + ' kg';
+  document.getElementById('estimatedCost').textContent   = '$' + totalCost.toFixed(2);
+}
+
+/* Reset all inputs to defaults */
+function resetForm() {
+  document.getElementById('printType').value = 'flexo';
+  document.getElementById('substrate').value = 'paper';
+  document.getElementById('printArea').value = 1000;
+  document.getElementById('coverage').value = '50';
+  document.getElementById('speed').value = 100;
+  document.getElementById('speedValue').textContent = '100';
+  document.getElementById('aniloxLPI').value = '600';
+  document.getElementById('plateDepth').value = '25';
+  updateProcessFields();
+  calculateInk();
+}
+
+/* Init */
+document.getElementById('year').textContent = new Date().getFullYear();
+updateProcessFields();
+calculateInk();
+</script>
+</body>
+</html>
